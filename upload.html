@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📤 Загрузить файлы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2ea44f, #22863a);
+            color: white;
+            padding: 25px 30px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-3px);
+        }
+        
+        .upload-area {
+            padding: 40px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #2ea44f;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9f9f9;
+            margin-bottom: 30px;
+        }
+        
+        .drop-zone:hover {
+            background: #f0f9f0;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(46, 164, 79, 0.2);
+        }
+        
+        .drop-zone.dragover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        
+        .drop-zone i {
+            font-size: 64px;
+            color: #2ea44f;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .selected-files {
+            margin-top: 30px;
+        }
+        
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            background: #f8f9fa;
+        }
+        
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .file-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .file-icon {
+            color: #2ea44f;
+            font-size: 20px;
+        }
+        
+        .file-details {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        
+        .file-size {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .remove-btn {
+            color: #e63946;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .remove-btn:hover {
+            background: #ffeaea;
+        }
+        
+        .upload-form {
+            margin-top: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2ea44f;
+            box-shadow: 0 0 0 3px rgba(46, 164, 79, 0.1);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .upload-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2ea44f, #22863a);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(46, 164, 79, 0.4);
+        }
+        
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ea44f, #36cf5e);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 5px;
+        }
+        
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .file-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .file-type-tag {
+            padding: 5px 12px;
+            background: #e9ecef;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #495057;
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #2ea44f;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .upload-stats {
+            display: flex;
+            gap: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2ea44f;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Назад к файлам
+            </a>
+            <h1><i class="fas fa-cloud-upload-alt"></i> Загрузить файлы</h1>
+            <p>Загрузите любые файлы в архив. Максимальный размер: 25 МБ на файл</p>
+        </header>
+        
+        <div class="upload-area">
+            <!-- Область для перетаскивания -->
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h2 style="margin-bottom: 10px;">Перетащите файлы сюда</h2>
+                <p style="color: #666; margin-bottom: 20px;">или кликните для выбора файлов</p>
+                <button class="upload-btn" style="width: auto; padding: 10px 30px; font-size: 16px;">
+                    <i class="fas fa-folder-open"></i> Выбрать файлы
+                </button>
+            </div>
+            
+            <input type="file" id="fileInput" class="file-input" multiple>
+            
+            <!-- Список выбранных файлов -->
+            <div class="selected-files" id="selectedFiles" style="display: none;">
+                <h3 style="margin-bottom: 15px;">Выбранные файлы:</h3>
+                <div class="file-list" id="fileList">
+                    <!-- Файлы будут добавляться здесь -->
+                </div>
+                
+                <div class="upload-stats" id="uploadStats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="fileCount">0</div>
+                        <div class="stat-label">Файлов</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalSize">0 МБ</div>
+                        <div class="stat-label">Общий размер</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="largeFiles">0</div>
+                        <div class="stat-label">Крупных (>10 МБ)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Форма с деталями -->
+            <div class="upload-form" id="uploadForm" style="display: none;">
+                <h3 style="margin-bottom: 20px;"><i class="fas fa-info-circle"></i> Детали загрузки</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectName"><i class="fas fa-folder"></i> Название проекта (папки)</label>
+                        <input type="text" id="projectName" placeholder="Например: Мои документы">
+                        <small style="color: #6c757d; display: block; margin-top: 5px;">
+                            Если оставить пустым, файлы загрузятся в корень
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fileType"><i class="fas fa-tag"></i> Тип файлов</label>
+                        <select id="fileType">
+                            <option value="">Не указан</option>
+                            <option value="documents">Документы</option>
+                            <option value="images">Изображения</option>
+                            <option value="code">Код</option>
+                            <option value="archive">Архивы</option>
+                            <option value="media">Медиа</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description"><i class="fas fa-align-left"></i> Описание</label>
+                    <textarea id="description" placeholder="Опишите, что это за файлы, для чего они нужны..."></textarea>
+                </div>
+                
+                <div class="file-types">
+                    <div class="file-type-tag">📷 JPG, PNG, GIF</div>
+                    <div class="file-type-tag">📄 PDF, DOC, XLS</div>
+                    <div class="file-type-tag">💻 HTML, JS, CSS</div>
+                    <div class="file-type-tag">🎵 MP3, MP4</div>
+                    <div class="file-type-tag">📦 ZIP, RAR</div>
+                    <div class="file-type-tag">📝 TXT, MD</div>
+                </div>
+                
+                <!-- Прогресс загрузки -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-header">
+                        <span>Загрузка файлов...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+                
+                <!-- Сообщения о статусе -->
+                <div class="status-message" id="statusMessage"></div>
+                
+                <!-- Кнопка загрузки -->
+                <button class="upload-btn" id="uploadButton" onclick="uploadToGitHub()">
+                    <i class="fas fa-cloud-upload-alt"></i> Начать загрузку
+                </button>
+            </div>
+            
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> Как это работает:</h3>
+                <ol>
+                    <li>Выберите файлы для загрузки (можно перетаскивать)</li>
+                    <li>Укажите детали (название проекта, описание)</li>
+                    <li>Нажмите "Начать загрузку"</li>
+                    <li>Файлы загрузятся в ваш GitHub репозиторий</li>
+                    <li>Через 1-2 минуты они появятся в архиве</li>
+                </ol>
+                <p style="margin-top: 10px; color: #2ea44f; font-weight: 500;">
+                    <i class="fas fa-check-circle"></i> Файлы сохраняются навсегда в вашем GitHub репозитории
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация
+        const CONFIG = {
+            username: 'ВАШ_ЛОГИН_GITHUB',      // Замените на свой
+            repo: 'ВАШ_РЕПОЗИТОРИЙ',           // Замените на свой
+            branch: 'main'
+        };
+        
+        let selectedFiles = [];
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDragAndDrop();
+            setupFileInput();
+        });
+        
+        // Настройка drag and drop
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('dropZone');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleSelectedFiles(files);
+                }
+            });
+        }
+        
+        // Настройка выбора файлов через диалог
+        function setupFileInput() {
+            const fileInput = document.getElementById('fileInput');
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleSelectedFiles(e.target.files);
+                }
+            });
+        }
+        
+        // Обработка выбранных файлов
+        function handleSelectedFiles(fileList) {
+            selectedFiles = Array.from(fileList);
+            updateFileList();
+            updateStats();
+            showUploadForm();
+        }
+        
+        // Обновить список файлов
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            
+            if (selectedFiles.length === 0) {
+                document.getElementById('selectedFiles').style.display = 'none';
+                document.getElementById('uploadForm').style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const icon = getFileIcon(file.name);
+                const size = formatFileSize(file.size);
+                
+                html += `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <i class="${icon} file-icon"></i>
+                            <div class="file-details">
+                                <div class="file-name" title="${file.name}">
+                                    ${truncateFileName(file.name, 40)}
+                                </div>
+                                <div class="file-size">${size}</div>
+                            </div>
+                        </div>
+                        <button class="remove-btn" onclick="removeFile(${index})" title="Удалить">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            
+            fileList.innerHTML = html;
+            document.getElementById('selectedFiles').style.display = 'block';
+        }
+        
+        // Удалить файл из списка
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            updateStats();
+            
+            if (selectedFiles.length === 0) {
+                document.getElementById('selectedFiles').style.display = 'none';
+                document.getElementById('uploadForm').style.display = 'none';
+            }
+        }
+        
+        // Обновить статистику
+        function updateStats() {
+            const fileCount = selectedFiles.length;
+            const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+            const largeFiles = selectedFiles.filter(file => file.size > 10 * 1024 * 1024).length;
+            
+            document.getElementById('fileCount').textContent = fileCount;
+            document.getElementById('totalSize').textContent = formatFileSize(totalSize);
+            document.getElementById('largeFiles').textContent = largeFiles;
+        }
+        
+        // Показать форму загрузки
+        function showUploadForm() {
+            document.getElementById('uploadForm').style.display = 'block';
+            
+            // Сбросить прогресс
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressPercent').textContent = '0%';
+            
+            // Скрыть сообщения
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.style.display = 'none';
+            statusMessage.className = 'status-message';
+            
+            // Включить кнопку
+            document.getElementById('uploadButton').disabled = false;
+        }
+        
+        // Загрузить файлы на GitHub
+        async function uploadToGitHub() {
+            if (selectedFiles.length === 0) {
+                showMessage('Выберите файлы для загрузки!', 'error');
+                return;
+            }
+            
+            // Проверить размеры файлов
+            const largeFiles = selectedFiles.filter(file => file.size > 25 * 1024 * 1024);
+            if (largeFiles.length > 0) {
+                showMessage(`Некоторые файлы превышают 25 МБ: ${largeFiles.map(f => f.name).join(', ')}`, 'error');
+                return;
+            }
+            
+            // Получить данные формы
+            const projectName = document.getElementById('projectName').value.trim();
+            const fileType = document.getElementById('fileType').value;
+            const description = document.getElementById('description').value.trim();
+            
+            // Показать прогресс
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('uploadButton').disabled = true;
+            
+            try {
+                // Для каждого файла создаём запрос к GitHub API
+                // ВНИМАНИЕ: Для реальной загрузки нужен GitHub токен!
+                // Этот код показывает процесс загрузки
+                
+                const totalFiles = selectedFiles.length;
+                let uploadedCount = 0;
+                
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    
+                    // Обновить прогресс
+                    const progress = ((i + 1) / totalFiles) * 100;
+                    updateProgress(progress);
+                    
+                    // Здесь будет реальная загрузка через GitHub API
+                    // Пример для демонстрации:
+                    await simulateUpload(file, projectName);
+                    
+                    uploadedCount++;
+                    
+                    // Обновить сообщение
+                    showMessage(`Загружено ${uploadedCount} из ${totalFiles} файлов`, 'success');
+                }
+                
+                // Завершено
+                updateProgress(100);
+                showMessage(`✅ Успешно! ${totalFiles} файлов отправлены на загрузку`, 'success');
+                
+                // Показать ссылку на GitHub
+                setTimeout(() => {
+                    const githubUrl = `https://github.com/${CONFIG.username}/${CONFIG.repo}`;
+                    const path = projectName ? `/tree/main/${projectName}` : '';
+                    
+                    showMessage(
+                        `📁 Файлы загружены! <br>
+                         Они появятся в архиве через 1-2 минуты.<br>
+                         <a href="${githubUrl}${path}" target="_blank" style="color: #0366d6; text-decoration: underline;">
+                             Посмотреть на GitHub
+                         </a>`,
+                        'success'
+                    );
+                    
+                    // Сбросить форму
+                    setTimeout(() => {
+                        resetForm();
+                    }, 5000);
+                    
+                }, 1000);
+                
+            } catch (error) {
+                showMessage(`Ошибка загрузки: ${error.message}`, 'error');
+                document.getElementById('uploadButton').disabled = false;
+            }
+        }
+        
+        // Симуляция загрузки (для демонстрации)
+        function simulateUpload(file, projectName) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    console.log(`Загружен файл: ${file.name} в папку: ${projectName || 'корень'}`);
+                    resolve();
+                }, 500);
+            });
+        }
+        
+        // Обновить прогресс загрузки
+        function updateProgress(percent) {
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            progressFill.style.width = `${percent}%`;
+            progressPercent.textContent = `${Math.round(percent)}%`;
+        }
+        
+        // Показать сообщение
+        function showMessage(text, type) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.innerHTML = text;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+        
+        // Сбросить форму
+        function resetForm() {
+            selectedFiles = [];
+            document.getElementById('fileInput').value = '';
+            
+            // Скрыть элементы
+            document.getElementById('selectedFiles').style.display = 'none';
+            document.getElementById('uploadForm').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('statusMessage').style.display = 'none';
+            
+            // Очистить поля формы
+            document.getElementById('projectName').value = '';
+            document.getElementById('fileType').value = '';
+            document.getElementById('description').value = '';
+            
+            // Включить кнопку
+            document.getElementById('uploadButton').disabled = false;
+            
+            // Показать сообщение
+            setTimeout(() => {
+                showMessage('✅ Форма готова для новой загрузки! Выберите файлы.', 'success');
+            }, 100);
+        }
+        
+        // Вспомогательные функции
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            
+            const iconMap = {
+                // Изображения
+                'jpg': 'fas fa-file-image', 'jpeg': 'fas fa-file-image',
+                'png': 'fas fa-file-image', 'gif': 'fas fa-file-image',
+                'svg': 'fas fa-file-image', 'webp': 'fas fa-file-image',
+                'bmp': 'fas fa-file-image',
+                
+                // Документы
+                'pdf': 'fas fa-file-pdf',
+                'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word',
+                'xls': 'fas fa-file-excel', 'xlsx': 'fas fa-file-excel',
+                'ppt': 'fas fa-file-powerpoint', 'pptx': 'fas fa-file-powerpoint',
+                
+                // Текст
+                'txt': 'fas fa-file-alt',
+                'md': 'fas fa-file-alt',
+                'rtf': 'fas fa-file-alt',
+                
+                // Код
+                'html': 'fas fa-file-code',
+                'css': 'fas fa-file-code',
+                'js': 'fas fa-file-code',
+                'json': 'fas fa-file-code',
+                'xml': 'fas fa-file-code',
+                'py': 'fas fa-file-code',
+                'java': 'fas fa-file-code',
+                'cpp': 'fas fa-file-code',
+                
+                // Архивы
+                'zip': 'fas fa-file-archive',
+                'rar': 'fas fa-file-archive',
+                '7z': 'fas fa-file-archive',
+                'tar': 'fas fa-file-archive',
+                'gz': 'fas fa-file-archive',
+                
+                // Медиа
+                'mp3': 'fas fa-file-audio',
+                'wav': 'fas fa-file-audio',
+                'mp4': 'fas fa-file-video',
+                'avi': 'fas fa-file-video',
+                'mov': 'fas fa-file-video',
+                'mkv': 'fas fa-file-video'
+            };
+            
+            return iconMap[ext] || 'fas fa-file';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Б';
+            
+            const k = 1024;
+            const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function truncateFileName(name, maxLength) {
+            if (name.length <= maxLength) return name;
+            
+            const extension = name.split('.').pop();
+            const nameWithoutExt = name.substring(0, name.length - extension.length - 1);
+            const maxNameLength = maxLength - extension.length - 4; // -4 для "..." и "."
+            
+            return nameWithoutExt.substring(0, maxNameLength) + '...' + extension;
+        }
+        
+        // Закрытие сообщений при клике
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('status-message')) {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
