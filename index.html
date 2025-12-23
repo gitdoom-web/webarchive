@@ -1,1 +1,756 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📁 Файловый архив</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f8fa;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #2ea44f, #22863a);
+            color: white;
+            padding: 25px 30px;
+        }
+        h1 { 
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .upload-btn {
+            background: white;
+            color: #2ea44f;
+            padding: 12px 25px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .breadcrumb {
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .breadcrumb a {
+            color: #0366d6;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .breadcrumb a:hover {
+            background: #e7f3ff;
+        }
+        .files-container {
+            padding: 30px;
+            min-height: 400px;
+        }
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .file-item, .folder-item {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .file-item:hover, .folder-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #2ea44f;
+        }
+        .folder-item {
+            background: #fff9e6;
+            border-color: #ffd166;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .folder-icon { color: #ffb347; }
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+        .file-size {
+            color: #6c757d;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .file-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .action-btn {
+            padding: 5px 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .action-btn:hover {
+            background: #e0e0e0;
+        }
+        .upload-area {
+            border: 3px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            border-radius: 10px;
+            margin: 20px 0;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+        .upload-area:hover {
+            border-color: #2ea44f;
+            background: #f0f9f0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .preview-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .preview-box img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+        .preview-box pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .stats {
+            display: flex;
+            gap: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2ea44f;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #2ea44f;
+        }
+        .progress-bar {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: #2ea44f;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: none;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-archive"></i> Файловый архив</h1>
+            <button class="upload-btn" onclick="showUploadModal()">
+                <i class="fas fa-cloud-upload-alt"></i> Загрузить файлы
+            </button>
+        </header>
 
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalFiles">0</div>
+                <div>Всего файлов</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalSize">0 MB</div>
+                <div>Общий размер</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="lastUpdate">-</div>
+                <div>Последнее обновление</div>
+            </div>
+        </div>
+
+        <div class="breadcrumb" id="breadcrumb">
+            <a href="#" onclick="loadFiles('')"><i class="fas fa-home"></i> Главная</a>
+        </div>
+
+        <div class="files-container">
+            <input type="text" class="search-box" placeholder="🔍 Поиск файлов..." 
+                   onkeyup="searchFiles(this.value)">
+            
+            <div class="files-grid" id="filesGrid">
+                <!-- Файлы загружаются сюда -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно загрузки -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('uploadModal')">&times;</span>
+            <h2><i class="fas fa-upload"></i> Загрузить файлы</h2>
+            
+            <div class="upload-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #666;"></i>
+                <h3>Перетащите файлы сюда</h3>
+                <p>или кликните для выбора</p>
+                <p style="color: #666; margin-top: 10px;">Поддерживаются любые файлы</p>
+            </div>
+
+            <input type="file" id="fileInput" multiple style="display: none;">
+
+            <div id="selectedFiles"></div>
+
+            <div class="progress-bar">
+                <div class="progress" id="uploadProgress"></div>
+            </div>
+
+            <div class="message" id="uploadMessage"></div>
+
+            <button class="upload-btn" onclick="uploadFiles()" style="width: 100%;">
+                <i class="fas fa-upload"></i> Начать загрузку
+            </button>
+        </div>
+    </div>
+
+    <!-- Модальное окно просмотра -->
+    <div class="modal" id="previewModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('previewModal')">&times;</span>
+            <h2 id="previewTitle">Просмотр файла</h2>
+            <div class="preview-box" id="previewContent">
+                <!-- Контент файла -->
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="action-btn" onclick="downloadCurrentFile()">
+                    <i class="fas fa-download"></i> Скачать
+                </button>
+                <button class="action-btn" onclick="copyFileContent()">
+                    <i class="fas fa-copy"></i> Копировать текст
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Настройки
+        const CONFIG = {
+            username: 'ВАШ_ЛОГИН_GITHUB',      // Замените на свой
+            repo: 'ВАШ_РЕПОЗИТОРИЙ',           // Замените на свой
+            branch: 'main'
+        };
+
+        let currentPath = '';
+        let allFiles = [];
+        let selectedFiles = [];
+        let currentFile = null;
+
+        // Загрузить файлы из репозитория
+        async function loadFiles(path = '') {
+            currentPath = path;
+            try {
+                const url = `https://api.github.com/repos/${CONFIG.username}/${CONFIG.repo}/contents/${path}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showEmptyState();
+                        return;
+                    }
+                    throw new Error('Ошибка загрузки');
+                }
+                
+                const data = await response.json();
+                allFiles = Array.isArray(data) ? data : [data];
+                
+                displayFiles(allFiles);
+                updateBreadcrumb(path);
+                updateStats();
+                
+            } catch (error) {
+                showEmptyState();
+                console.error('Error:', error);
+            }
+        }
+
+        // Отобразить файлы
+        function displayFiles(files) {
+            const grid = document.getElementById('filesGrid');
+            
+            if (!files.length) {
+                showEmptyState();
+                return;
+            }
+            
+            // Сортировка: папки -> файлы
+            files.sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'dir' ? -1 : 1;
+            });
+            
+            let html = '';
+            
+            files.forEach(item => {
+                const isFolder = item.type === 'dir';
+                const icon = getFileIcon(item.name, isFolder);
+                const size = isFolder ? '' : formatSize(item.size);
+                const date = new Date(item.updated_at).toLocaleDateString();
+                
+                html += `
+                    <div class="${isFolder ? 'folder-item' : 'file-item'}" 
+                         onclick="${isFolder ? `openFolder('${item.path}')` : `previewFile(${JSON.stringify(item)})`}">
+                        <i class="${icon} icon ${isFolder ? 'folder-icon' : ''}"></i>
+                        <div class="file-name" title="${item.name}">${truncate(item.name, 20)}</div>
+                        ${size ? `<div class="file-size">${size}</div>` : ''}
+                        <div class="file-size" style="color: #999;">${date}</div>
+                        
+                        ${!isFolder ? `
+                            <div class="file-actions">
+                                <button class="action-btn" onclick="event.stopPropagation(); downloadFile('${item.download_url}', '${item.name}')">
+                                    <i class="fas fa-download"></i> Скачать
+                                </button>
+                                <button class="action-btn" onclick="event.stopPropagation(); previewFile(${JSON.stringify(item)})">
+                                    <i class="fas fa-eye"></i> Посмотреть
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Пустая папка
+        function showEmptyState() {
+            const grid = document.getElementById('filesGrid');
+            grid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <i class="fas fa-folder-open" style="font-size: 64px; color: #dee2e6;"></i>
+                    <h3 style="margin: 20px 0; color: #6c757d;">Папка пуста</h3>
+                    <p style="margin-bottom: 20px;">Загрузите первый файл!</p>
+                    <button class="upload-btn" onclick="showUploadModal()">
+                        <i class="fas fa-cloud-upload-alt"></i> Загрузить файлы
+                    </button>
+                </div>
+            `;
+        }
+
+        // Открыть папку
+        function openFolder(path) {
+            loadFiles(path);
+        }
+
+        // Показать загрузочное окно
+        function showUploadModal() {
+            selectedFiles = [];
+            document.getElementById('selectedFiles').innerHTML = '';
+            document.getElementById('uploadProgress').style.width = '0%';
+            document.getElementById('uploadMessage').style.display = 'none';
+            
+            // Настройка drag and drop
+            const dropArea = document.getElementById('dropArea');
+            dropArea.ondragover = (e) => {
+                e.preventDefault();
+                dropArea.style.borderColor = '#2ea44f';
+                dropArea.style.background = '#f0f9f0';
+            };
+            
+            dropArea.ondragleave = () => {
+                dropArea.style.borderColor = '#ccc';
+                dropArea.style.background = '#f8f9fa';
+            };
+            
+            dropArea.ondrop = (e) => {
+                e.preventDefault();
+                dropArea.style.borderColor = '#ccc';
+                dropArea.style.background = '#f8f9fa';
+                handleFiles(e.dataTransfer.files);
+            };
+            
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        // Обработка выбранных файлов
+        function handleFiles(fileList) {
+            selectedFiles = Array.from(fileList);
+            updateSelectedFilesList();
+        }
+
+        // Обновить список выбранных файлов
+        function updateSelectedFilesList() {
+            const container = document.getElementById('selectedFiles');
+            
+            if (selectedFiles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '<h3 style="margin: 15px 0;">Выбранные файлы:</h3>';
+            let totalSize = 0;
+            
+            selectedFiles.forEach((file, index) => {
+                totalSize += file.size;
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; 
+                         padding: 10px; background: #f8f9fa; margin: 5px 0; border-radius: 5px;">
+                        <div>
+                            <i class="${getFileIcon(file.name)}"></i>
+                            <span style="margin-left: 10px;">${file.name}</span>
+                            <span style="color: #666; margin-left: 10px;">(${formatSize(file.size)})</span>
+                        </div>
+                        <button onclick="removeFile(${index})" style="background: none; border: none; 
+                                color: #e63946; cursor: pointer;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            
+            html += `<p style="margin-top: 10px; color: #666;">
+                Всего: ${selectedFiles.length} файлов, ${formatSize(totalSize)}
+            </p>`;
+            
+            container.innerHTML = html;
+        }
+
+        // Удалить файл из списка
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateSelectedFilesList();
+        }
+
+        // Загрузить файлы на GitHub
+        async function uploadFiles() {
+            if (selectedFiles.length === 0) {
+                showMessage('Выберите файлы для загрузки!', 'error');
+                return;
+            }
+
+            const progressBar = document.getElementById('uploadProgress');
+            progressBar.style.width = '10%';
+
+            // Здесь будет код для загрузки на GitHub
+            // Для реальной загрузки нужен GitHub токен
+            
+            showMessage('⚠️ Для загрузки нужен GitHub токен', 'error');
+            
+            // Симуляция загрузки
+            setTimeout(() => {
+                progressBar.style.width = '100%';
+                showMessage('Файлы готовы к загрузке!', 'success');
+                
+                // Ссылка для ручной загрузки
+                const uploadUrl = `https://github.com/${CONFIG.username}/${CONFIG.repo}/upload/main/${currentPath}`;
+                window.open(uploadUrl, '_blank');
+                
+                // Через 2 секунды обновляем список
+                setTimeout(() => {
+                    closeModal('uploadModal');
+                    loadFiles(currentPath);
+                }, 2000);
+            }, 1000);
+        }
+
+        // Просмотр файла
+        function previewFile(file) {
+            currentFile = file;
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            document.getElementById('previewTitle').textContent = file.name;
+            const content = document.getElementById('previewContent');
+            
+            // Показать загрузку
+            content.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>';
+            
+            // Открыть модальное окно
+            document.getElementById('previewModal').style.display = 'flex';
+            
+            // Загрузить содержимое
+            fetch(file.download_url)
+                .then(response => {
+                    if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(ext)) {
+                        // Изображение
+                        return response.blob().then(blob => {
+                            const url = URL.createObjectURL(blob);
+                            content.innerHTML = `<img src="${url}" style="max-width: 100%; border-radius: 5px;">`;
+                        });
+                    } else if (['txt', 'md', 'js', 'css', 'html', 'json', 'xml'].includes(ext)) {
+                        // Текстовый файл
+                        return response.text().then(text => {
+                            content.innerHTML = `
+                                <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; 
+                                      max-height: 400px; overflow: auto; white-space: pre-wrap;">
+${escapeHtml(text)}
+                                </pre>
+                            `;
+                        });
+                    } else if (ext === 'pdf') {
+                        // PDF
+                        content.innerHTML = `
+                            <iframe src="${file.download_url}" 
+                                    style="width: 100%; height: 500px; border: none; border-radius: 5px;"></iframe>
+                        `;
+                    } else {
+                        // Другие файлы
+                        content.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <i class="fas fa-file" style="font-size: 64px; color: #ccc;"></i>
+                                <h4 style="margin: 20px 0;">Просмотр не поддерживается</h4>
+                                <p>Скачайте файл для просмотра</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    content.innerHTML = `<p style="color: #e63946;">Ошибка загрузки файла: ${error.message}</p>`;
+                });
+        }
+
+        // Скачать текущий файл
+        function downloadCurrentFile() {
+            if (currentFile) {
+                downloadFile(currentFile.download_url, currentFile.name);
+            }
+        }
+
+        // Копировать текст файла
+        function copyFileContent() {
+            const pre = document.querySelector('#previewContent pre');
+            if (pre) {
+                navigator.clipboard.writeText(pre.textContent)
+                    .then(() => alert('Текст скопирован!'))
+                    .catch(() => alert('Ошибка копирования'));
+            }
+        }
+
+        // Скачать файл
+        function downloadFile(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Обновить хлебные крошки
+        function updateBreadcrumb(path) {
+            const breadcrumb = document.getElementById('breadcrumb');
+            const parts = path ? path.split('/').filter(p => p) : [];
+            
+            let html = `<a href="#" onclick="loadFiles('')"><i class="fas fa-home"></i> Главная</a>`;
+            
+            parts.forEach((part, index) => {
+                const current = parts.slice(0, index + 1).join('/');
+                html += ` / <a href="#" onclick="loadFiles('${current}')">${part}</a>`;
+            });
+            
+            breadcrumb.innerHTML = html;
+        }
+
+        // Обновить статистику
+        function updateStats() {
+            const files = allFiles.filter(f => f.type === 'file');
+            const totalSize = files.reduce((sum, f) => sum + (f.size || 0), 0);
+            
+            document.getElementById('totalFiles').textContent = files.length;
+            document.getElementById('totalSize').textContent = formatSize(totalSize);
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Поиск файлов
+        function searchFiles(query) {
+            const items = document.querySelectorAll('.file-item, .folder-item');
+            items.forEach(item => {
+                const name = item.querySelector('.file-name').textContent.toLowerCase();
+                if (name.includes(query.toLowerCase()) || !query) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Вспомогательные функции
+        function getFileIcon(filename, isFolder = false) {
+            if (isFolder) return 'fas fa-folder';
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'jpg': 'fas fa-image', 'jpeg': 'fas fa-image', 'png': 'fas fa-image',
+                'gif': 'fas fa-image', 'svg': 'fas fa-image', 'bmp': 'fas fa-image',
+                'pdf': 'fas fa-file-pdf',
+                'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word',
+                'xls': 'fas fa-file-excel', 'xlsx': 'fas fa-file-excel',
+                'zip': 'fas fa-file-archive', 'rar': 'fas fa-file-archive',
+                'txt': 'fas fa-file-alt', 'md': 'fas fa-file-alt',
+                'html': 'fas fa-file-code', 'css': 'fas fa-file-code',
+                'js': 'fas fa-file-code', 'json': 'fas fa-file-code',
+                'mp3': 'fas fa-file-audio', 'mp4': 'fas fa-file-video',
+                'mpg': 'fas fa-file-video', 'avi': 'fas fa-file-video'
+            };
+            return icons[ext] || 'fas fa-file';
+        }
+
+        function formatSize(bytes) {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+            if (bytes < 1024*1024*1024) return (bytes/(1024*1024)).toFixed(1) + ' MB';
+            return (bytes/(1024*1024*1024)).toFixed(1) + ' GB';
+        }
+
+        function truncate(text, maxLength) {
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('uploadMessage');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            msg.style.display = 'block';
+        }
+
+        // Загрузить файлы при старте
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFiles('');
+            
+            // Обработчик выбора файлов
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // Закрытие модальных окон
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
